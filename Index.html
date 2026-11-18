@@ -1,1 +1,739 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Household Solar Microgrid Sizing Calculator - Bangladesh</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        input[type="number"]::-webkit-inner-spin-button,
+        input[type="number"]::-webkit-outer-spin-button {
+            opacity: 1;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col">
 
+    <!-- Top Navigation / Header -->
+    <header class="bg-emerald-900 text-white shadow-md border-b border-emerald-800">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div class="flex items-center gap-3">
+                <div class="p-2.5 bg-amber-400 text-emerald-950 rounded-xl shadow-sm">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                    </svg>
+                </div>
+                <div>
+                    <h1 class="text-xl sm:text-2xl font-bold tracking-tight">Solar Microgrid Sizing Calculator</h1>
+                    <p class="text-emerald-200 text-xs sm:text-sm">Household Off-Grid / Hybrid Engineering Tool &bull; Tailored for Bangladesh (BDT ৳)</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-2 self-end sm:self-auto">
+                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-emerald-800 text-emerald-100 border border-emerald-700">
+                    <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
+                    Irradiance: 4.5 kWh/m²/day
+                </span>
+                <button id="resetBtn" class="text-xs bg-emerald-800 hover:bg-emerald-700 text-white px-3 py-1.5 rounded-lg border border-emerald-700 transition">
+                    Reset Defaults
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-grow w-full space-y-8">
+
+        <!-- 4 KPI Summary Cards -->
+        <section aria-label="System Sizing Summary" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+            <!-- Card 1: Total Daily Load -->
+            <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-200 flex flex-col justify-between relative overflow-hidden">
+                <div class="flex items-start justify-between">
+                    <div>
+                        <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">Total Daily Load</p>
+                        <div class="mt-2 flex items-baseline gap-1.5">
+                            <span id="cardDailyKwh" class="text-3xl font-bold text-slate-900">0.00</span>
+                            <span class="text-sm font-semibold text-slate-500">kWh/day</span>
+                        </div>
+                    </div>
+                    <div class="p-2.5 bg-blue-50 text-blue-600 rounded-xl">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                        </svg>
+                    </div>
+                </div>
+                <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
+                    <span>Energy Demand: <strong id="cardDailyWh" class="text-slate-700">0 Wh</strong></span>
+                    <span>Peak: <strong id="cardPeakWatts" class="text-slate-700">0 W</strong></span>
+                </div>
+            </div>
+
+            <!-- Card 2: Solar Panel Size -->
+            <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-200 flex flex-col justify-between relative overflow-hidden">
+                <div class="flex items-start justify-between">
+                    <div>
+                        <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">Required Solar Array</p>
+                        <div class="mt-2 flex items-baseline gap-1.5">
+                            <span id="cardSolarKw" class="text-3xl font-bold text-amber-600">0.00</span>
+                            <span class="text-sm font-semibold text-slate-500">kWp</span>
+                        </div>
+                    </div>
+                    <div class="p-2.5 bg-amber-50 text-amber-600 rounded-xl">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                        </svg>
+                    </div>
+                </div>
+                <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
+                    <span>450W Mono Panels:</span>
+                    <span id="cardPanelCount" class="px-2 py-0.5 bg-amber-100 text-amber-800 font-bold rounded-md">0 Panels</span>
+                </div>
+            </div>
+
+            <!-- Card 3: Battery Bank Size -->
+            <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-200 flex flex-col justify-between relative overflow-hidden">
+                <div class="flex items-start justify-between">
+                    <div>
+                        <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">Battery Bank Capacity</p>
+                        <div class="mt-2 flex items-baseline gap-1.5">
+                            <span id="cardBatteryAh" class="text-3xl font-bold text-emerald-600">0</span>
+                            <span class="text-sm font-semibold text-slate-500">Ah</span>
+                        </div>
+                    </div>
+                    <div class="p-2.5 bg-emerald-50 text-emerald-600 rounded-xl">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M21 10h-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2v-3h2a1 1 0 001-1v-2a1 1 0 00-1-1z" />
+                        </svg>
+                    </div>
+                </div>
+                <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
+                    <span>System Bus: <strong id="cardSysVoltage" class="text-slate-700">24V</strong></span>
+                    <span>Storage: <strong id="cardBatteryKwh" class="text-slate-700">0.0 kWh</strong></span>
+                </div>
+            </div>
+
+            <!-- Card 4: Cost & Payback -->
+            <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-200 flex flex-col justify-between relative overflow-hidden">
+                <div class="flex items-start justify-between">
+                    <div>
+                        <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">Est. Cost & Payback</p>
+                        <div class="mt-2 flex items-baseline gap-1">
+                            <span class="text-lg font-bold text-purple-700">৳</span>
+                            <span id="cardCostBdt" class="text-2xl sm:text-3xl font-bold text-purple-700">0</span>
+                        </div>
+                    </div>
+                    <div class="p-2.5 bg-purple-50 text-purple-600 rounded-xl">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                    </div>
+                </div>
+                <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
+                    <span>Simple Payback:</span>
+                    <span id="cardPaybackYears" class="px-2 py-0.5 bg-purple-100 text-purple-800 font-bold rounded-md">0.0 Years</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Main Workspace Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+
+            <!-- Left Column (2/3): Appliance List & System Parameters -->
+            <div class="lg:col-span-2 space-y-8">
+
+                <!-- Dynamic Appliance List Card -->
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                    <div class="p-5 sm:p-6 border-b border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                        <div>
+                            <h2 class="text-lg font-bold text-slate-900">1. Household Appliance Load Profile</h2>
+                            <p class="text-xs text-slate-500 mt-0.5">Add or adjust appliances to calculate daily energy consumption</p>
+                        </div>
+                        <button id="addApplianceBtn" type="button" class="inline-flex items-center justify-center gap-1.5 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium rounded-xl shadow-sm transition">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+                            </svg>
+                            Add Appliance
+                        </button>
+                    </div>
+
+                    <!-- Quick Add Presets for Bangladesh -->
+                    <div class="px-5 sm:px-6 py-3 bg-slate-50 border-b border-slate-200 flex flex-wrap items-center gap-2 text-xs">
+                        <span class="text-slate-500 font-medium mr-1">Quick Add:</span>
+                        <button type="button" data-preset='{"name":"WiFi Router & ONU","watts":12,"qty":1,"hours":24}' class="preset-btn px-2.5 py-1 bg-white hover:bg-emerald-50 text-slate-700 hover:text-emerald-700 rounded-lg border border-slate-200 transition shadow-2xs">+ WiFi Router (12W)</button>
+                        <button type="button" data-preset='{"name":"Laptop / PC","watts":65,"qty":1,"hours":5}' class="preset-btn px-2.5 py-1 bg-white hover:bg-emerald-50 text-slate-700 hover:text-emerald-700 rounded-lg border border-slate-200 transition shadow-2xs">+ Laptop (65W)</button>
+                        <button type="button" data-preset='{"name":"LED TV (32 inch)","watts":50,"qty":1,"hours":4}' class="preset-btn px-2.5 py-1 bg-white hover:bg-emerald-50 text-slate-700 hover:text-emerald-700 rounded-lg border border-slate-200 transition shadow-2xs">+ LED TV (50W)</button>
+                        <button type="button" data-preset='{"name":"Water Pump (0.5 HP)","watts":375,"qty":1,"hours":1}' class="preset-btn px-2.5 py-1 bg-white hover:bg-emerald-50 text-slate-700 hover:text-emerald-700 rounded-lg border border-slate-200 transition shadow-2xs">+ Water Pump (375W)</button>
+                        <button type="button" data-preset='{"name":"Inverter AC (1 Ton)","watts":900,"qty":1,"hours":6}' class="preset-btn px-2.5 py-1 bg-white hover:bg-emerald-50 text-slate-700 hover:text-emerald-700 rounded-lg border border-slate-200 transition shadow-2xs">+ 1-Ton AC (900W)</button>
+                    </div>
+
+                    <!-- Appliance Table -->
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="border-b border-slate-200 text-[11px] font-semibold uppercase tracking-wider text-slate-400 bg-slate-50/50">
+                                    <th class="py-3 pl-5 sm:pl-6 pr-2 min-w-[160px]">Appliance Name</th>
+                                    <th class="py-3 px-2 w-28">Power (W)</th>
+                                    <th class="py-3 px-2 w-24">Qty</th>
+                                    <th class="py-3 px-2 w-28">Hours/Day</th>
+                                    <th class="py-3 px-2 w-28 text-right">Daily Energy</th>
+                                    <th class="py-3 pl-2 pr-5 sm:pr-6 w-12 text-center"></th>
+                                </tr>
+                            </thead>
+                            <tbody id="applianceTableBody" class="divide-y divide-slate-200 text-sm">
+                                <!-- Dynamic rows injected here -->
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Empty State Warning -->
+                    <div id="emptyState" class="hidden p-8 text-center">
+                        <p class="text-slate-500 text-sm">No appliances added. Click <strong>"Add Appliance"</strong> or use a preset above to begin sizing.</p>
+                    </div>
+                </div>
+
+                <!-- System Parameters Card -->
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 sm:p-6">
+                    <div class="mb-5">
+                        <h2 class="text-lg font-bold text-slate-900">2. System Engineering Parameters</h2>
+                        <p class="text-xs text-slate-500 mt-0.5">Configure environmental, battery, and tariff assumptions for Bangladesh</p>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                        <!-- Peak Sun Hours -->
+                        <div class="bg-slate-50 p-4 rounded-xl border border-slate-200/80">
+                            <div class="flex justify-between items-center mb-1.5">
+                                <label for="paramPsh" class="block text-xs font-semibold uppercase tracking-wider text-slate-600">Peak Sun Hours / Day</label>
+                                <span class="text-xs text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded font-medium">BD Avg: 4.5h</span>
+                            </div>
+                            <div class="relative mt-1">
+                                <input type="number" id="paramPsh" value="4.5" min="1" max="12" step="0.1"
+                                    class="w-full rounded-lg border border-slate-300 bg-white px-3.5 py-2 text-sm font-semibold text-slate-900 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20">
+                                <span class="absolute right-3.5 top-2 text-xs text-slate-400 font-medium">hrs/day</span>
+                            </div>
+                            <p class="text-[11px] text-slate-400 mt-1.5">Includes 0.75 system efficiency factor for wiring, dust & inverter losses.</p>
+                        </div>
+
+                        <!-- System Voltage -->
+                        <div class="bg-slate-50 p-4 rounded-xl border border-slate-200/80">
+                            <div class="flex justify-between items-center mb-1.5">
+                                <label for="paramVoltage" class="block text-xs font-semibold uppercase tracking-wider text-slate-600">DC Bus System Voltage</label>
+                                <span class="text-xs text-slate-500 font-medium">Inverter Bus</span>
+                            </div>
+                            <div class="relative mt-1">
+                                <select id="paramVoltage"
+                                    class="w-full rounded-lg border border-slate-300 bg-white px-3.5 py-2 text-sm font-semibold text-slate-900 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20">
+                                    <option value="12">12V DC (Small loads &lt; 1kW)</option>
+                                    <option value="24" selected>24V DC (Medium Household 1–3kW)</option>
+                                    <option value="48">48V DC (Large Household &gt; 3kW)</option>
+                                </select>
+                            </div>
+                            <p class="text-[11px] text-slate-400 mt-1.5">Higher voltage reduces cable current and resistive losses.</p>
+                        </div>
+
+                        <!-- Battery Depth of Discharge (DoD) -->
+                        <div class="bg-slate-50 p-4 rounded-xl border border-slate-200/80">
+                            <div class="flex justify-between items-center mb-1.5">
+                                <label for="paramDod" class="block text-xs font-semibold uppercase tracking-wider text-slate-600">Battery Depth of Discharge</label>
+                                <span class="text-xs text-amber-700 bg-amber-50 px-2 py-0.5 rounded font-medium">Tubular: 50%</span>
+                            </div>
+                            <div class="relative mt-1">
+                                <input type="number" id="paramDod" value="50" min="10" max="100" step="5"
+                                    class="w-full rounded-lg border border-slate-300 bg-white px-3.5 py-2 text-sm font-semibold text-slate-900 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20">
+                                <span class="absolute right-3.5 top-2 text-xs text-slate-400 font-medium">% DoD</span>
+                            </div>
+                            <p class="text-[11px] text-slate-400 mt-1.5">50% for Eastern/Rahimafrooz Lead-Acid Tubular; 80% for LiFePO4.</p>
+                        </div>
+
+                        <!-- Grid Electricity Tariff -->
+                        <div class="bg-slate-50 p-4 rounded-xl border border-slate-200/80">
+                            <div class="flex justify-between items-center mb-1.5">
+                                <label for="paramTariff" class="block text-xs font-semibold uppercase tracking-wider text-slate-600">Grid Electricity Tariff</label>
+                                <span class="text-xs text-purple-700 bg-purple-50 px-2 py-0.5 rounded font-medium">BPDB / DESCO / REB</span>
+                            </div>
+                            <div class="relative mt-1">
+                                <input type="number" id="paramTariff" value="8.5" min="1" max="50" step="0.25"
+                                    class="w-full rounded-lg border border-slate-300 bg-white px-3.5 py-2 text-sm font-semibold text-slate-900 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20">
+                                <span class="absolute right-3.5 top-2 text-xs text-slate-400 font-medium">BDT / kWh</span>
+                            </div>
+                            <p class="text-[11px] text-slate-400 mt-1.5">Used to compute annual bill savings and simple payback period.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column (1/3): Doughnut Chart & Engineering Breakdown -->
+            <div class="space-y-8">
+
+                <!-- Chart Card -->
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 sm:p-6">
+                    <div class="mb-4">
+                        <h2 class="text-lg font-bold text-slate-900">Energy Consumption Share</h2>
+                        <p class="text-xs text-slate-500 mt-0.5">Daily Wh distribution by household appliance</p>
+                    </div>
+                    <div class="relative h-64 w-full flex items-center justify-center">
+                        <canvas id="consumptionChart"></canvas>
+                    </div>
+                    <div id="chartLegendSummary" class="mt-5 pt-4 border-t border-slate-100 space-y-2 max-h-48 overflow-y-auto text-xs">
+                        <!-- Populated dynamically -->
+                    </div>
+                </div>
+
+                <!-- Financial & Engineering Notes Card -->
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 sm:p-6 space-y-4">
+                    <h3 class="text-sm font-bold uppercase tracking-wider text-slate-700 border-b border-slate-100 pb-2.5">
+                        Cost & Financial Breakdown (BDT)
+                    </h3>
+
+                    <div class="space-y-2.5 text-sm">
+                        <div class="flex justify-between items-center">
+                            <span class="text-slate-500 text-xs">Solar Array Cost (@ ৳85,000/kW):</span>
+                            <span id="breakdownSolarCost" class="font-semibold text-slate-800">৳ 0</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-slate-500 text-xs">Battery Bank Cost (@ ৳18/Wh):</span>
+                            <span id="breakdownBatteryCost" class="font-semibold text-slate-800">৳ 0</span>
+                        </div>
+                        <div class="flex justify-between items-center pt-2 border-t border-slate-100">
+                            <span class="text-slate-700 font-semibold text-xs">Total Estimated CAPEX:</span>
+                            <span id="breakdownTotalCost" class="font-bold text-purple-700">৳ 0</span>
+                        </div>
+                        <div class="flex justify-between items-center text-emerald-700 bg-emerald-50 px-3 py-2 rounded-lg mt-2">
+                            <span class="text-xs font-medium">Annual Grid Bill Savings:</span>
+                            <span id="breakdownAnnualSavings" class="font-bold text-xs">৳ 0 / yr</span>
+                        </div>
+                    </div>
+
+                    <div class="pt-3 border-t border-slate-100 text-[11px] text-slate-400 space-y-1 leading-relaxed">
+                        <p>&bull; <strong>Autonomy Factor:</strong> 1.2x applied to battery sizing for cloudy/monsoon days.</p>
+                        <p>&bull; <strong>System Efficiency:</strong> 75% derating accounts for temperature, inverter & wiring losses.</p>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t border-slate-200 mt-12">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-400 gap-2">
+            <p>Household Solar Microgrid Sizing Calculator &bull; Engineered for Bangladesh</p>
+            <p>Formulas adhere to standard off-grid PV &amp; battery sizing methodology</p>
+        </div>
+    </footer>
+
+    <!-- Application JavaScript -->
+    <script>
+        // --- 1. Default Pre-Populated Bangladeshi Household Appliances ---
+        const DEFAULT_APPLIANCES = [
+            { id: 1, name: 'LED Bulb', watts: 15, qty: 6, hours: 6 },
+            { id: 2, name: 'Ceiling Fan', watts: 75, qty: 3, hours: 10 },
+            { id: 3, name: 'Refrigerator (Inverter)', watts: 120, qty: 1, hours: 12 }
+        ];
+
+        let appliances = JSON.parse(JSON.stringify(DEFAULT_APPLIANCES));
+        let nextId = 4;
+        let chartInstance = null;
+
+        // Color Palette for Chart.js
+        const CHART_COLORS = [
+            '#10b981', // Emerald 500
+            '#f59e0b', // Amber 500
+            '#3b82f6', // Blue 500
+            '#8b5cf6', // Violet 500
+            '#ec4899', // Pink 500
+            '#06b6d4', // Cyan 500
+            '#f97316', // Orange 500
+            '#6366f1', // Indigo 500
+            '#14b8a6', // Teal 500
+            '#84cc16'  // Lime 500
+        ];
+
+        // --- 2. DOM Element References ---
+        const tableBody = document.getElementById('applianceTableBody');
+        const emptyState = document.getElementById('emptyState');
+        const addApplianceBtn = document.getElementById('addApplianceBtn');
+        const resetBtn = document.getElementById('resetBtn');
+
+        // Parameter Inputs
+        const paramPsh = document.getElementById('paramPsh');
+        const paramVoltage = document.getElementById('paramVoltage');
+        const paramDod = document.getElementById('paramDod');
+        const paramTariff = document.getElementById('paramTariff');
+
+        // Summary Card Outputs
+        const cardDailyKwh = document.getElementById('cardDailyKwh');
+        const cardDailyWh = document.getElementById('cardDailyWh');
+        const cardPeakWatts = document.getElementById('cardPeakWatts');
+        const cardSolarKw = document.getElementById('cardSolarKw');
+        const cardPanelCount = document.getElementById('cardPanelCount');
+        const cardBatteryAh = document.getElementById('cardBatteryAh');
+        const cardSysVoltage = document.getElementById('cardSysVoltage');
+        const cardBatteryKwh = document.getElementById('cardBatteryKwh');
+        const cardCostBdt = document.getElementById('cardCostBdt');
+        const cardPaybackYears = document.getElementById('cardPaybackYears');
+
+        // Breakdown Outputs
+        const breakdownSolarCost = document.getElementById('breakdownSolarCost');
+        const breakdownBatteryCost = document.getElementById('breakdownBatteryCost');
+        const breakdownTotalCost = document.getElementById('breakdownTotalCost');
+        const breakdownAnnualSavings = document.getElementById('breakdownAnnualSavings');
+        const chartLegendSummary = document.getElementById('chartLegendSummary');
+
+        // --- 3. Helper Formatting Functions ---
+        function formatBDT(num) {
+            if (!isFinite(num) || isNaN(num)) return '0';
+            return new Intl.NumberFormat('en-IN', { maximumFractionDigits: 0 }).format(Math.round(num));
+        }
+
+        function sanitizePositiveNumber(val, fallback = 0, min = 0, max = Infinity) {
+            const parsed = parseFloat(val);
+            if (isNaN(parsed) || !isFinite(parsed)) return fallback;
+            return Math.min(max, Math.max(min, parsed));
+        }
+
+        function escapeHtml(str) {
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;');
+        }
+
+        // --- 4. Render Appliance Rows ---
+        function renderApplianceRows() {
+            tableBody.innerHTML = '';
+
+            if (appliances.length === 0) {
+                emptyState.classList.remove('hidden');
+            } else {
+                emptyState.classList.add('hidden');
+            }
+
+            appliances.forEach((item) => {
+                const rowWh = sanitizePositiveNumber(item.watts) * sanitizePositiveNumber(item.qty) * sanitizePositiveNumber(item.hours, 0, 0, 24);
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-slate-50/80 transition group';
+                tr.dataset.id = item.id;
+
+                tr.innerHTML = `
+                    <td class="py-2.5 pl-5 sm:pl-6 pr-2">
+                        <input type="text" value="${escapeHtml(item.name)}" placeholder="e.g. Ceiling Fan"
+                            data-field="name" data-id="${item.id}"
+                            class="appliance-input w-full rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-sm font-medium text-slate-800 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20">
+                    </td>
+                    <td class="py-2.5 px-2">
+                        <input type="number" value="${item.watts}" min="0" step="1"
+                            data-field="watts" data-id="${item.id}"
+                            class="appliance-input w-full rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-sm text-slate-800 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20">
+                    </td>
+                    <td class="py-2.5 px-2">
+                        <input type="number" value="${item.qty}" min="0" step="1"
+                            data-field="qty" data-id="${item.id}"
+                            class="appliance-input w-full rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-sm text-slate-800 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20">
+                    </td>
+                    <td class="py-2.5 px-2">
+                        <input type="number" value="${item.hours}" min="0" max="24" step="0.5"
+                            data-field="hours" data-id="${item.id}"
+                            class="appliance-input w-full rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-sm text-slate-800 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20">
+                    </td>
+                    <td class="py-2.5 px-2 text-right font-semibold text-slate-700 whitespace-nowrap">
+                        <span id="row-wh-${item.id}">${formatBDT(rowWh)}</span> <span class="text-xs font-normal text-slate-400">Wh</span>
+                    </td>
+                    <td class="py-2.5 pl-2 pr-5 sm:pr-6 text-center">
+                        <button type="button" data-remove-id="${item.id}" title="Remove Appliance"
+                            class="remove-btn p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            </svg>
+                        </button>
+                    </td>
+                `;
+                tableBody.appendChild(tr);
+            });
+        }
+
+        // --- 5. Core Engineering Calculation Logic ---
+        function calculateSystem() {
+            // 1. Validate & Read System Parameters
+            const peakSunHours = sanitizePositiveNumber(paramPsh.value, 4.5, 0.5, 24);
+            const systemVoltage = sanitizePositiveNumber(paramVoltage.value, 24, 12, 48);
+            const dodPercent = sanitizePositiveNumber(paramDod.value, 50, 5, 100);
+            const dodDecimal = dodPercent / 100;
+            const gridTariff = sanitizePositiveNumber(paramTariff.value, 8.5, 0.1, 1000);
+
+            // 2. Calculate Total Daily Energy (Wh/day) & Peak Connected Load (W)
+            let totalDailyEnergyWh = 0;
+            let totalPeakWatts = 0;
+
+            appliances.forEach((item) => {
+                const w = sanitizePositiveNumber(item.watts, 0, 0);
+                const q = sanitizePositiveNumber(item.qty, 0, 0);
+                const h = sanitizePositiveNumber(item.hours, 0, 0, 24);
+
+                const itemWh = w * q * h;
+                totalDailyEnergyWh += itemWh;
+                totalPeakWatts += (w * q);
+
+                // Update individual row subtotal in DOM if present
+                const rowWhEl = document.getElementById(`row-wh-${item.id}`);
+                if (rowWhEl) {
+                    rowWhEl.textContent = formatBDT(itemWh);
+                }
+            });
+
+            const dailyKwh = totalDailyEnergyWh / 1000;
+
+            // 3. Required Solar Array Size (kW) = (Total Daily Energy / 1000) / (Peak Sun Hours * 0.75)
+            const solarKw = dailyKwh > 0 ? dailyKwh / (peakSunHours * 0.75) : 0;
+            const num450wPanels = solarKw > 0 ? Math.ceil((solarKw * 1000) / 450) : 0;
+
+            // 4. Required Battery Bank Capacity (Ah) = (Total Daily Energy * 1.2) / (System Voltage * DoD)
+            const batteryAh = totalDailyEnergyWh > 0
+                ? (totalDailyEnergyWh * 1.2) / (systemVoltage * dodDecimal)
+                : 0;
+            const batteryTotalKwh = (batteryAh * systemVoltage) / 1000;
+
+            // 5. Estimated Cost in BDT = (Solar kW * 85,000 BDT) + (Battery Ah * System Voltage * 18 BDT)
+            const solarCostBdt = solarKw * 85000;
+            const batteryCostBdt = batteryAh * systemVoltage * 18;
+            const estimatedCostBdt = solarCostBdt + batteryCostBdt;
+
+            // 6. Estimated Payback Period (Years) = Estimated Cost / (Daily kWh * 365 * Grid Tariff)
+            const annualSavingsBdt = dailyKwh * 365 * gridTariff;
+            const paybackYears = annualSavingsBdt > 0 ? estimatedCostBdt / annualSavingsBdt : 0;
+
+            // 7. Update Summary Cards UI
+            cardDailyKwh.textContent = dailyKwh.toFixed(2);
+            cardDailyWh.textContent = `${formatBDT(totalDailyEnergyWh)} Wh`;
+            cardPeakWatts.textContent = `${formatBDT(totalPeakWatts)} W`;
+
+            cardSolarKw.textContent = solarKw.toFixed(2);
+            cardPanelCount.textContent = `${num450wPanels} ${num450wPanels === 1 ? 'Panel' : 'Panels'} (450W)`;
+
+            cardBatteryAh.textContent = Math.round(batteryAh).toLocaleString('en-IN');
+            cardSysVoltage.textContent = `${systemVoltage}V`;
+            cardBatteryKwh.textContent = `${batteryTotalKwh.toFixed(1)} kWh`;
+
+            cardCostBdt.textContent = formatBDT(estimatedCostBdt);
+            cardPaybackYears.textContent = paybackYears > 0 ? `${paybackYears.toFixed(1)} Years` : '0.0 Years';
+
+            // 8. Update Cost Breakdown UI
+            breakdownSolarCost.textContent = `৳ ${formatBDT(solarCostBdt)}`;
+            breakdownBatteryCost.textContent = `৳ ${formatBDT(batteryCostBdt)}`;
+            breakdownTotalCost.textContent = `৳ ${formatBDT(estimatedCostBdt)}`;
+            breakdownAnnualSavings.textContent = `৳ ${formatBDT(annualSavingsBdt)} / yr`;
+
+            // 9. Update Doughnut Chart
+            updateChart(totalDailyEnergyWh);
+        }
+
+        // --- 6. Chart.js Initialization & Update ---
+        function initChart() {
+            const ctx = document.getElementById('consumptionChart').getContext('2d');
+            chartInstance = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        data: [],
+                        backgroundColor: CHART_COLORS,
+                        borderWidth: 2,
+                        borderColor: '#ffffff',
+                        hoverOffset: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '65%',
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const val = context.parsed || 0;
+                                    const dataset = context.dataset.data;
+                                    const total = dataset.reduce((acc, cur) => acc + cur, 0);
+                                    const pct = total > 0 ? ((val / total) * 100).toFixed(1) : 0;
+                                    return ` ${context.label}: ${val.toLocaleString('en-IN')} Wh (${pct}%)`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function updateChart(totalWh) {
+            if (!chartInstance) return;
+
+            if (totalWh <= 0 || appliances.length === 0) {
+                chartInstance.data.labels = ['No Active Load'];
+                chartInstance.data.datasets[0].data = [1];
+                chartInstance.data.datasets[0].backgroundColor = ['#e2e8f0'];
+                chartInstance.update();
+                chartLegendSummary.innerHTML = `<p class="text-slate-400 text-center py-2">Add appliances with positive usage to view breakdown.</p>`;
+                return;
+            }
+
+            const labels = [];
+            const data = [];
+            const colors = [];
+            let legendHtml = '';
+
+            appliances.forEach((item, index) => {
+                const w = sanitizePositiveNumber(item.watts, 0, 0);
+                const q = sanitizePositiveNumber(item.qty, 0, 0);
+                const h = sanitizePositiveNumber(item.hours, 0, 0, 24);
+                const wh = w * q * h;
+
+                const labelName = item.name.trim() !== '' ? item.name.trim() : `Appliance ${index + 1}`;
+                const color = CHART_COLORS[index % CHART_COLORS.length];
+                const pct = totalWh > 0 ? ((wh / totalWh) * 100).toFixed(1) : '0.0';
+
+                labels.push(labelName);
+                data.push(wh);
+                colors.push(color);
+
+                legendHtml += `
+                    <div class="flex items-center justify-between py-1">
+                        <div class="flex items-center gap-2 truncate pr-2">
+                            <span class="w-2.5 h-2.5 rounded-full shrink-0" style="background-color: ${color}"></span>
+                            <span class="text-slate-700 font-medium truncate">${escapeHtml(labelName)}</span>
+                        </div>
+                        <div class="text-right shrink-0">
+                            <span class="font-semibold text-slate-800">${formatBDT(wh)} Wh</span>
+                            <span class="text-slate-400 ml-1">(${pct}%)</span>
+                        </div>
+                    </div>
+                `;
+            });
+
+            chartInstance.data.labels = labels;
+            chartInstance.data.datasets[0].data = data;
+            chartInstance.data.datasets[0].backgroundColor = colors;
+            chartInstance.update();
+
+            chartLegendSummary.innerHTML = legendHtml;
+        }
+
+        // --- 7. Event Listeners ---
+
+        // Table input changes (delegated so focus isn't lost on typing)
+        tableBody.addEventListener('input', (e) => {
+            const target = e.target;
+            if (!target.classList.contains('appliance-input')) return;
+
+            const id = parseInt(target.dataset.id, 10);
+            const field = target.dataset.field;
+            const appliance = appliances.find(a => a.id === id);
+            if (!appliance) return;
+
+            if (field === 'name') {
+                appliance.name = target.value;
+            } else if (field === 'watts') {
+                appliance.watts = sanitizePositiveNumber(target.value, 0, 0);
+            } else if (field === 'qty') {
+                appliance.qty = sanitizePositiveNumber(target.value, 0, 0);
+            } else if (field === 'hours') {
+                let hrs = sanitizePositiveNumber(target.value, 0, 0, 24);
+                if (parseFloat(target.value) > 24) target.value = 24;
+                if (parseFloat(target.value) < 0) target.value = 0;
+                appliance.hours = hrs;
+            }
+
+            calculateSystem();
+        });
+
+        // Clean up negative or empty inputs on blur
+        tableBody.addEventListener('change', (e) => {
+            const target = e.target;
+            if (!target.classList.contains('appliance-input')) return;
+            const field = target.dataset.field;
+            if (field !== 'name') {
+                const max = field === 'hours' ? 24 : Infinity;
+                const cleanVal = sanitizePositiveNumber(target.value, 0, 0, max);
+                target.value = cleanVal;
+            }
+        });
+
+        // Remove appliance button (delegated)
+        tableBody.addEventListener('click', (e) => {
+            const btn = e.target.closest('.remove-btn');
+            if (!btn) return;
+            const id = parseInt(btn.dataset.removeId, 10);
+            appliances = appliances.filter(a => a.id !== id);
+            renderApplianceRows();
+            calculateSystem();
+        });
+
+        // Add blank appliance row
+        addApplianceBtn.addEventListener('click', () => {
+            appliances.push({
+                id: nextId++,
+                name: 'New Appliance',
+                watts: 50,
+                qty: 1,
+                hours: 4
+            });
+            renderApplianceRows();
+            calculateSystem();
+        });
+
+        // Quick preset buttons
+        document.querySelectorAll('.preset-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const preset = JSON.parse(btn.dataset.preset);
+                appliances.push({
+                    id: nextId++,
+                    name: preset.name,
+                    watts: preset.watts,
+                    qty: preset.qty,
+                    hours: preset.hours
+                });
+                renderApplianceRows();
+                calculateSystem();
+            });
+        });
+
+        // System parameter changes
+        [paramPsh, paramVoltage, paramDod, paramTariff].forEach(input => {
+            input.addEventListener('input', calculateSystem);
+            input.addEventListener('change', () => {
+                if (input === paramPsh) input.value = sanitizePositiveNumber(input.value, 4.5, 0.5, 24);
+                if (input === paramDod) input.value = sanitizePositiveNumber(input.value, 50, 5, 100);
+                if (input === paramTariff) input.value = sanitizePositiveNumber(input.value, 8.5, 0.1, 1000);
+                calculateSystem();
+            });
+        });
+
+        // Reset defaults
+        resetBtn.addEventListener('click', () => {
+            appliances = JSON.parse(JSON.stringify(DEFAULT_APPLIANCES));
+            nextId = 4;
+            paramPsh.value = 4.5;
+            paramVoltage.value = '24';
+            paramDod.value = 50;
+            paramTariff.value = 8.5;
+            renderApplianceRows();
+            calculateSystem();
+        });
+
+        // --- 8. Initialize Application ---
+        document.addEventListener('DOMContentLoaded', () => {
+            initChart();
+            renderApplianceRows();
+            calculateSystem();
+        });
+    </script>
+</body>
+</html>
